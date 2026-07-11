@@ -16,10 +16,24 @@ class ApplicationController extends Controller
     /**
      * 1. Αρχική Σελίδα (Βιτρίνα Αγγελιών)
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Φέρνουμε μόνο τις ενεργές αγγελίες
-        $jobs = Job::where('is_active', true)->latest()->get();
+        // Φέρνουμε όλες τις αγγελίες μέχρι να τις διαγράψει ο διαχειριστής
+        $search = trim($request->query('search', ''));
+
+        $jobs = Job::query();
+
+        if ($search !== '') {
+            $jobs->where(function ($query) use ($search) {
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%")
+                    ->orWhere('type', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $jobs = $jobs->latest()->get();
+
         return view('welcome', compact('jobs'));
     }
 
@@ -96,20 +110,24 @@ class ApplicationController extends Controller
      * 5. Ενημέρωση Κατάστασης (Status Update)
      */
     public function updateStatus(Request $request, $id)
-{
-    $candidate = Candidate::with('job')->findOrFail($id);
-    $candidate->update(['status' => $request->status]);
+    {
+        $candidate = Candidate::with('job')->findOrFail($id);
+        $candidate->update(['status' => $request->status]);
 
-    // Αποστολή Email
-    try {
-        Mail::to($candidate->email)->send(new CandidateStatusNotification($candidate));
-    } catch (\Exception $e) {
-        // Αν αποτύχει το email, συνεχίζουμε αλλά με μήνυμα σφάλματος
-        return back()->with('error', 'Το status άλλαξε, αλλά το email δεν στάλθηκε: ' . $e->getMessage());
+        $mailError = null;
+
+        try {
+            Mail::to($candidate->email)->send(new CandidateStatusNotification($candidate));
+        } catch (\Exception $e) {
+            $mailError = $e->getMessage();
+        }
+
+        if ($mailError) {
+            return back()->with('success', 'Η κατάσταση ενημερώθηκε. Το email δεν στάλθηκε: ' . $mailError);
+        }
+
+        return back()->with('success', 'Η κατάσταση ενημερώθηκε και στάλθηκε email στον υποψήφιο!');
     }
-
-    return back()->with('success', 'Η κατάσταση ενημερώθηκε και στάλθηκε email στον υποψήφιο!');
-}
 
     /**
      * 6. AI Ανάλυση Βιογραφικού
