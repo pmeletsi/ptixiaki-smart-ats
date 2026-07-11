@@ -1,4 +1,3 @@
-# ptixiaki-smart-ats
 # SmartRecruit ATS
 
 A Laravel 10 Applicant Tracking System for job listings, candidate applications, and admin management.
