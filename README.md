@@ -130,6 +130,7 @@ The backend handles:
 - `openai-php/client` ^0.10.3
 - `smalot/pdfparser` ^2.12
 
-## License
+## Web Site 
 
-This project is open source and licensed under the MIT License.
+-<img width="1413" height="692" alt="Στιγμιότυπο οθόνης 2026-03-11 233242" src="https://github.com/user-attachments/assets/abd9559b-ebc4-4fa2-8fa4-963c58be0a93" />
+
